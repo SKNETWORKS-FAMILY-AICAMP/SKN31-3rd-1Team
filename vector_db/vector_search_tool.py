@@ -82,18 +82,28 @@ def search_dementia_guideline(query: str, top_k: int = TOP_K_DEFAULT) -> str:
 
     query_vector = model.encode([query], normalize_embeddings=True)[0].tolist()
 
-    hits = client.search(
+    result = client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=query_vector,
+        query=query_vector,
         limit=top_k,
         score_threshold=SCORE_THRESHOLD,
+        with_payload=True,
+
     )
+
+    hits = result.points
 
     return _format_results(hits)
 
 
 if __name__ == "__main__":
     # 단독 실행 테스트
-    test_query = "부모님이 자꾸 같은 질문을 반복하세요. 치매 초기 증상일까요?"
-    result = search_dementia_guideline.invoke({"query": test_query})
-    print(result)
+    test_queries = [
+        "부모님이 자꾸 같은 질문을 반복하세요",
+        "치매 조기검진 비용은 얼마인가요",
+        "길을 잃어버리는 것도 치매 증상인가요",
+    ]
+    for q in test_queries:
+        print(f"\n질의: {q}")
+        print(search_dementia_guideline.invoke({"query": q}))
+        print("-" * 50)

@@ -33,7 +33,8 @@
 ## 2. 프로젝트 개요
 
 ### 2.1 프로젝트명
-<!-- TODO -->
+- AI 치매 정보 알리미
+- https://dementia-front.vercel.app/
 
 ### 2.2 프로젝트 소개
 

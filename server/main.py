@@ -53,8 +53,21 @@ class ChatRequest(BaseModel):
 def read_root():
     return {"message": "치매 안내 챗봇 API 서버가 정상적으로 실행 중입니다."}
 
+is_first_health_check = True
+
 @app.get("/health")
 def health_check():
+    global is_first_health_check
+    if is_first_health_check:
+        is_first_health_check = False
+        webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
+        if webhook_url:
+            try:
+                import requests
+                requests.post(webhook_url, json={"content": "🚀 **치매 안내 챗봇 API** Render 배포가 완료되어 서버가 정상적으로 시작되었습니다!"})
+            except Exception as e:
+                print(f"Discord webhook failed: {e}")
+                
     return {"status": "ok"}
 
 

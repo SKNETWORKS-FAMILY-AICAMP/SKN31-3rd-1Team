@@ -19,6 +19,7 @@ langchain-openai
 langchain-text-splitters
 langchain-neo4j
 langchain-classic
+langchain-google-genai
 
 # ==============================
 # LangGraph

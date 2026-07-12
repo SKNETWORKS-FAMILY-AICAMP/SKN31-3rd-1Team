@@ -121,7 +121,7 @@ EXTRACTOR_SYSTEM_PROMPT = f"""당신은 치매 상담 대화에서 정보를 추
 3. null 을 절대 넣지 마세요.
 
 # 임무
-사용자(보호자)의 발화에서 명시적으로 언급된 정보만 뽑아 JSON으로 출력하세요.
+사용자(본인 또는 보호자)의 발화에서 명시적으로 언급된 정보만 뽑아 JSON으로 출력하세요.
 
 # 추가 규칙
 4. symptoms 와 safety_flags 는 아래 목록의 코드만 사용하세요.
@@ -131,7 +131,7 @@ EXTRACTOR_SYSTEM_PROMPT = f"""당신은 치매 상담 대화에서 정보를 추
 
 # 출력 스키마
 {{
-  "relation": string,          // 대상자와의 관계. 예: "어머니"
+  "relation": string,          // 대상자와의 관계. 예: "어머니", "아버지", "본인"
   "age": integer,              // 대상자 나이
   "symptoms": [string],        // 증상 코드 목록
   "duration": string,          // 증상 시작 시점. 예: "6개월 이상"
@@ -287,7 +287,12 @@ def propose_state_change(user_message: str, target_relation: str, config: Runnab
         
         new_subject_id = str(uuid.uuid4())
         age = patch.get("age")
-        birth_year = datetime.now().year - int(age) if age else None
+        birth_year = None
+        if age:
+            try:
+                birth_year = datetime.now().year - int(age)
+            except (ValueError, TypeError):
+                birth_year = None
             
         new_subject = {
             "subject_id": new_subject_id,

@@ -1,3 +1,12 @@
+import sys
+import os
+
+# 부모 디렉토리(SKN31-3rd-1Team)를 시스템 경로에 추가하여 
+# 어디서 실행하든 server.* 와 vector_db.* 모듈을 찾을 수 있게 합니다.
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -56,39 +65,31 @@ agent = create_agent(
     하지만 사실은 나를 사랑해요.    
     """,
 )
-messages=[]
-#################################################
+from server.agent import build_agent
 
 @app.post("/api/chat")
 def chat_endpoint(request: ChatRequest):
-    # 프론트엔드 통신 테스트용 더미 로직
-    # 마지막으로 보낸 사용자 메시지를 추출
-    last_user_message = ""  # 사용자가 보낸 메세지
+    # 1. 프론트엔드에서 받은 메시지 중 가장 마지막 사용자의 질문(단건)만 추출합니다.
+    # 토큰 폭발(TPM 초과)을 방지하기 위해 이전 대화 기록은 당분간 제외합니다.
+    last_user_message = ""
     for msg in reversed(request.messages):
         if msg.get("role") == "user":
             last_user_message = msg.get("content", "")
             break
-    messages.append(HumanMessage(content=last_user_message))
-    response = agent.invoke({
-        "messages":messages
-    })
-    messages.append(AIMessage(content=response['messages'][-1].content))
-    reply_text = response['messages'][-1].content
-    
-    #return {"reply": reply_text}
+            
+    formatted_messages = [("user", last_user_message)]
+
+    # 2. 캐싱된(싱글톤) 에이전트 인스턴스 가져오기
+    agent = build_agent()
+
+    # 3. 에이전트 실행 (단건 질문만 전달)
+    result = agent.invoke({"messages": formatted_messages})
+
+    # 4. 구조화된 응답 추출 및 반환
+    structured = result["structured_response"]
+    response_data = structured.model_dump()
+
     return {
-    "session_id": request.user_id,
-    "response": {
-        "type": "reply",
-        "content": {
-        "text": reply_text,
-        },
-        "sources": [
-        {
-            "title": "치매 가이드북 2장",
-            "snippet": "같은 질문을 반복하는 양상은 초기 단계에서...",
-            "url": "https://www.naver.com"
-        }
-        ]
-    }
+        "session_id": request.user_id,
+        "response": response_data
     }

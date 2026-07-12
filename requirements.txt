@@ -62,3 +62,5 @@ bs4
 python-dotenv
 requests
 ipywidgets
+fastapi
+uvicorn

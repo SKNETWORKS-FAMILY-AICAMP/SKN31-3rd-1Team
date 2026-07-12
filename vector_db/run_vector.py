@@ -49,8 +49,10 @@ HEADERS = {
 TARGET_URLS = [
     "https://ansim.nid.or.kr/introduce/early_service.aspx", # 치매안심센터 치매조기검진사업
     "https://www.mohw.go.kr/menu.es?mid=a10712010100", # 보건복지부 치매조기검진사업
-    # "https://health.kdca.go.kr/healthinfo/biz/health/gnrlzHealthInfo/gnrlzHealthInfo/gnrlzHealthInfoView.do?cntnts_sn=6261", # 질병관리청 국가건강정보포털
+    "https://health.kdca.go.kr/healthinfo/biz/health/gnrlzHealthInfo/gnrlzHealthInfo/gnrlzHealthInfoView.do?cntnts_sn=6261", # 질병관리청 국가건강정보포털
     "https://www.easylaw.go.kr/CSP/OnhunqueansInfoRetrieve.laf?onhunqnaAstSeq=97&onhunqueSeq=4461", # 법제처 찾기쉬운 생활법령 정보
+    "https://www.amc.seoul.kr/asan/healthinfo/disease/diseaseDetail.do?contentId=31575",  # 서울아산병원 - 치매 증상 전반
+    "https://www.snubh.org/service/info/com/view.do?BNO=452&Board_ID=B004&RNUM=2",          # 분당서울대병원 - 초기증상 + 자가진단
 ]
 
 CHUNK_SIZE = 400
@@ -100,6 +102,9 @@ def extract_text_from_page(url: str) -> dict:
         or soup.select_one("div#contents_body")
         or soup.select_one("div#print-content")
         or soup.select_one("div#contents > ul.question")
+        or soup.select_one("div.contDescription")
+        or soup.select_one("div.reset_css_form")
+        
         # or soup.select_one("article")
         # or soup.body
     )

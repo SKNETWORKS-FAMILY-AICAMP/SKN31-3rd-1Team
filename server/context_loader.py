@@ -87,7 +87,10 @@ def summarize_old_message(oldest_turn: dict, existing_summary: str) -> str:
             SystemMessage(content=sys_prompt),
             HumanMessage(content=user_msg)
         ])
-        return res.content.strip()
+        content = res.content
+        if isinstance(content, list):
+            content = " ".join([c.get("text", "") for c in content if isinstance(c, dict) and "text" in c])
+        return content.strip() if isinstance(content, str) else str(content)
     except Exception as e:
         print(f"Error in summarize_old_message: {e}")
         return existing_summary

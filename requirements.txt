@@ -54,7 +54,12 @@ sentence_transformers
 pandas
 numpy
 pypdf
-bs4
+beautifulsoup4
+
+# ==============================
+# Database / API
+# ==============================
+supabase
 
 
 # ==============================

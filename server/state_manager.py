@@ -2,6 +2,7 @@ import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
 from typing import Dict, Any
+from datetime import datetime, timezone
 
 load_dotenv()
 
@@ -130,7 +131,8 @@ class StateManager:
         try:
             self.client.table("state").upsert({
                 "subject_id": subject_id,
-                "data": new_state
+                "data": new_state,
+                "updated_at": datetime.now(timezone.utc).isoformat()
             }).execute()
         except Exception as e:
             print(f"Error updating state: {e}")

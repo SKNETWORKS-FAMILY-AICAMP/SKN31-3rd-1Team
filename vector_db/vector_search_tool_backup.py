@@ -5,9 +5,6 @@
 Qdrant(dementia_guideline 컬렉션)에서 질의와 의미적으로 유사한 청크를 검색해
 LLM이 답변 생성 시 참고할 수 있는 형태(텍스트 + 출처)로 반환한다.
 
-임베딩: OpenAI text-embedding-3-small (API 기반, 로컬 메모리 사용 없음)
--> 서버 RAM이 제한적인 환경(예: 512MB)을 고려해 로컬 임베딩 모델 대신 API 방식 사용.
-
 LangChain의 @tool 데코레이터를 사용해 LangGraph 에이전트(ToolNode 등)에
 그대로 bind 할 수 있도록 구성.
 """
@@ -17,27 +14,25 @@ from functools import lru_cache
 
 from dotenv import load_dotenv
 from langchain_core.tools import tool
-from openai import OpenAI
 from qdrant_client import QdrantClient
+from sentence_transformers import SentenceTransformer
 
 load_dotenv()
 
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
 COLLECTION_NAME = "dementia_guideline"
-EMBEDDING_MODEL_NAME = "text-embedding-3-small"
+EMBEDDING_MODEL_NAME = "BAAI/bge-m3"
 
 TOP_K_DEFAULT = 4
-SCORE_THRESHOLD = 0.3  # OpenAI 임베딩은 bge-m3와 유사도 분포가 달라 threshold를 낮춰서 시작 (실제 검색 결과 보며 조정 권장)
+SCORE_THRESHOLD = 0.4  # 코사인 유사도 기준, 너무 낮은 관련도 결과는 제외
 
 
 # ------------------------------------------------------------
-# 클라이언트는 프로세스당 한 번만 생성 (lru_cache로 재사용)
+# 클라이언트/모델은 프로세스당 한 번만 로드 (lru_cache로 재사용)
 # ------------------------------------------------------------
 @lru_cache(maxsize=1)
-def _get_qdrant_client() -> QdrantClient:
+def _get_client() -> QdrantClient:
     if not QDRANT_URL or not QDRANT_API_KEY:
         raise EnvironmentError(
             "QDRANT_URL / QDRANT_API_KEY가 설정되어 있지 않습니다. .env 파일을 확인하세요."
@@ -46,16 +41,8 @@ def _get_qdrant_client() -> QdrantClient:
 
 
 @lru_cache(maxsize=1)
-def _get_openai_client() -> OpenAI:
-    if not OPENAI_API_KEY:
-        raise EnvironmentError("OPENAI_API_KEY가 설정되어 있지 않습니다. .env 파일을 확인하세요.")
-    return OpenAI(api_key=OPENAI_API_KEY)
-
-
-def _embed_query(query: str) -> list[float]:
-    client = _get_openai_client()
-    response = client.embeddings.create(model=EMBEDDING_MODEL_NAME, input=[query])
-    return response.data[0].embedding
+def _get_embedding_model() -> SentenceTransformer:
+    return SentenceTransformer(EMBEDDING_MODEL_NAME)
 
 
 def _format_results(hits) -> str:
@@ -90,8 +77,10 @@ def search_dementia_guideline(query: str, top_k: int = TOP_K_DEFAULT) -> str:
     Returns:
         관련 가이드라인 텍스트와 출처가 포함된 문자열
     """
-    client = _get_qdrant_client()
-    query_vector = _embed_query(query)
+    client = _get_client()
+    model = _get_embedding_model()
+
+    query_vector = model.encode([query], normalize_embeddings=True)[0].tolist()
 
     result = client.query_points(
         collection_name=COLLECTION_NAME,
@@ -99,15 +88,16 @@ def search_dementia_guideline(query: str, top_k: int = TOP_K_DEFAULT) -> str:
         limit=top_k,
         score_threshold=SCORE_THRESHOLD,
         with_payload=True,
+
     )
 
     hits = result.points
-
 
     return _format_results(hits)
 
 
 if __name__ == "__main__":
+    # 단독 실행 테스트
     test_queries = [
         "부모님이 자꾸 같은 질문을 반복하세요",
         "치매 조기검진 비용은 얼마인가요",

@@ -26,7 +26,7 @@ from bs4 import BeautifulSoup
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
-from openai import OpenAI
+from sentence_transformers import SentenceTransformer
 
 load_dotenv()
 
@@ -60,11 +60,10 @@ CHUNK_OVERLAP = 50
 
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 COLLECTION_NAME = "dementia_guideline"
-EMBEDDING_MODEL_NAME = "text-embedding-3-small"  # OpenAI API 기반 (로컬 메모리 사용 없음)
-VECTOR_SIZE = 1536  # text-embedding-3-small 차원
-RECREATE_COLLECTION = True  # ⚠️ 기존에 랜덤 UUID로 중복 적재된 데이터 정리 위해 1회 True로 실행 후, 다시 False로 되돌릴 것
+EMBEDDING_MODEL_NAME = "BAAI/bge-m3"
+VECTOR_SIZE = 1024
+RECREATE_COLLECTION = False  # 결정론적 chunk_id 덕분에 재실행해도 upsert로 자동 덮어써짐. 완전 초기화가 필요할 때만 True로 변경
 
 NAV_PATTERNS = [
     r"홈\s*>\s*.*?>.*",
@@ -135,7 +134,7 @@ def step1_collect():
 
     with open(RAW_GUIDELINE_PATH, "w", encoding="utf-8") as f:
         json.dump(collected, f, ensure_ascii=False, indent=2)
-    print(f"저장 완료: {RAW_GUIDELINE_PATH} (총 {len(collected)}개 문서)")
+    print(f"저장 완료: {RAW_GUIDELINE_PATH} ({len(collected)}개 페이지)")
 
 
 # ==============================================================
@@ -255,24 +254,12 @@ def ensure_collection(client: QdrantClient, recreate: bool = False):
         print(f"기존 컬렉션 사용: {COLLECTION_NAME}")
 
 
-def get_openai_client() -> OpenAI:
-    if not OPENAI_API_KEY:
-        raise EnvironmentError("OPENAI_API_KEY가 설정되어 있지 않습니다. .env 파일을 확인하세요.")
-    return OpenAI(api_key=OPENAI_API_KEY)
-
-
-def embed_and_upload(client: QdrantClient, openai_client: OpenAI, chunks: list, batch_size: int = 100):
+def embed_and_upload(client: QdrantClient, model: SentenceTransformer, chunks: list, batch_size: int = 32):
     total = len(chunks)
     for start in range(0, total, batch_size):
         batch = chunks[start:start + batch_size]
         texts = [c["text"] for c in batch]
-
-        # OpenAI 임베딩 API 호출 (로컬 모델 로드/메모리 사용 없음)
-        response = openai_client.embeddings.create(
-            model=EMBEDDING_MODEL_NAME,
-            input=texts,
-        )
-        vectors = [item.embedding for item in response.data]
+        vectors = model.encode(texts, normalize_embeddings=True).tolist()
 
         points = [
             PointStruct(
@@ -296,8 +283,8 @@ def step4_load_qdrant():
             "QDRANT_API_KEY=your_api_key"
         )
 
-    print("OpenAI 임베딩 클라이언트 준비 중...")
-    openai_client = get_openai_client()
+    print("임베딩 모델 로드 중...")
+    model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
     client = get_qdrant_client()
     ensure_collection(client, recreate=RECREATE_COLLECTION)
@@ -306,7 +293,7 @@ def step4_load_qdrant():
         chunks = json.load(f)
 
     print(f"총 {len(chunks)}개 청크 임베딩 및 적재 시작")
-    embed_and_upload(client, openai_client, chunks)
+    embed_and_upload(client, model, chunks)
 
     info = client.get_collection(COLLECTION_NAME)
     print(f"적재 완료. points_count: {info.points_count}")

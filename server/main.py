@@ -49,14 +49,9 @@ class ChatRequest(BaseModel):
     user_name: str
     messages: List[Dict[str, str]]
 
-@app.get("/")
-def read_root():
-    return {"message": "치매 안내 챗봇 API 서버가 정상적으로 실행 중입니다."}
-
 is_first_health_check = True
 
-@app.get("/health")
-def health_check():
+def trigger_deploy_webhook():
     global is_first_health_check
     if is_first_health_check:
         is_first_health_check = False
@@ -64,10 +59,18 @@ def health_check():
         if webhook_url:
             try:
                 import requests
-                requests.post(webhook_url, json={"content": "🚀 **치매 안내 챗봇 API** Render 배포가 완료되어 서버가 정상적으로 시작되었습니다!"})
+                requests.post(webhook_url, json={"content": "🚀 **치매 안내 챗봇 API** 배포가 완료되어 서버가 정상적으로 시작되었습니다!"})
             except Exception as e:
                 print(f"Discord webhook failed: {e}")
-                
+
+@app.get("/")
+def read_root():
+    trigger_deploy_webhook()
+    return {"message": "치매 안내 챗봇 API 서버가 정상적으로 실행 중입니다."}
+
+@app.get("/health")
+def health_check():
+    trigger_deploy_webhook()
     return {"status": "ok"}
 
 

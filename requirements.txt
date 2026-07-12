@@ -45,6 +45,7 @@ neo4j-graphrag
 qdrant-client
 langchain-qdrant
 fastembed
+sentence_transformers
 
 # ==============================
 # Data Processing
@@ -52,6 +53,8 @@ fastembed
 pandas
 numpy
 pypdf
+bs4
+
 
 # ==============================
 # Environment

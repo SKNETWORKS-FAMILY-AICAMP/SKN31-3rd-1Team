@@ -18,6 +18,11 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain.agents import create_agent
 
+from server.agent import build_agent
+from server.context_loader import load_context, save_and_summarize
+import json
+
+
 app = FastAPI(
     title="치매 안내 챗봇 API",
     description="치매 안내 관련 LLM 챗봇 서비스를 위한 백엔드 API",
@@ -52,23 +57,6 @@ def read_root():
 def health_check():
     return {"status": "ok"}
 
-######################################
-load_dotenv()
-model = ChatOpenAI(
-    model="gpt-5.4-mini",
-)
-agent = create_agent(
-    model=model,
-    system_prompt="""
-    당신은 상냥하지만 츤데레인 챗봇입니다.
-    사용자가 나를 좋아한다고 생각하세요.
-    하지만 겉으로는 쌀쌀맞게 대하세요.
-    하지만 사실은 나를 사랑해요.    
-    """,
-)
-from server.agent import build_agent
-from server.context_loader import load_context, save_and_summarize
-import json
 
 @app.post("/api/chat")
 def chat_endpoint(request: ChatRequest, background_tasks: BackgroundTasks):

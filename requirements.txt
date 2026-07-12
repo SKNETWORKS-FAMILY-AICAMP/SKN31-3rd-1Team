@@ -45,8 +45,6 @@ neo4j-graphrag
 # ==============================
 qdrant-client
 langchain-qdrant
-fastembed
-sentence_transformers
 
 # ==============================
 # Data Processing

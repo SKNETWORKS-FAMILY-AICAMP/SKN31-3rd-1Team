@@ -7,7 +7,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel
@@ -27,6 +27,7 @@ app = FastAPI(
 # CORS 설정
 origins = [
     "http://localhost:5173",                 # 로컬 개발 환경 (Vite 기본 포트)
+    "http://127.0.0.1:5173",                 # 로컬 개발 환경 (127.0.0.1)
     "https://dementia-front.vercel.app",     # Vercel 배포 환경
 ]
 
@@ -66,28 +67,56 @@ agent = create_agent(
     """,
 )
 from server.agent import build_agent
+from server.context_loader import load_context, save_and_summarize
+import json
 
 @app.post("/api/chat")
-def chat_endpoint(request: ChatRequest):
-    # 1. 프론트엔드에서 받은 메시지 중 가장 마지막 사용자의 질문(단건)만 추출합니다.
-    # 토큰 폭발(TPM 초과)을 방지하기 위해 이전 대화 기록은 당분간 제외합니다.
+def chat_endpoint(request: ChatRequest, background_tasks: BackgroundTasks):
+    # 1. 프론트엔드에서 받은 메시지 중 가장 마지막 사용자의 질문만 추출
     last_user_message = ""
     for msg in reversed(request.messages):
         if msg.get("role") == "user":
             last_user_message = msg.get("content", "")
             break
             
-    formatted_messages = [("user", last_user_message)]
+    # 2. Supabase에서 이전 대화 맥락(요약 + 최근 N턴) 가져오기
+    chat_id, summary, recent = load_context(request.user_id)
+    
+    formatted_messages = []
+    if summary:
+        formatted_messages.append(("system", f"[이전 대화 요약]\n{summary}"))
+        
+    for turn in recent:
+        if "user" in turn:
+            formatted_messages.append(("user", turn["user"]))
+        if "ai" in turn:
+            formatted_messages.append(("assistant", turn["ai"]))
+            
+    # 최신 사용자 질문 추가
+    formatted_messages.append(("user", last_user_message))
 
-    # 2. 캐싱된(싱글톤) 에이전트 인스턴스 가져오기
+    # 3. 캐싱된 에이전트 인스턴스 가져오기
     agent = build_agent()
 
     # 3. 에이전트 실행 (단건 질문만 전달)
-    result = agent.invoke({"messages": formatted_messages})
+    result = agent.invoke(
+        {"messages": formatted_messages},
+        config={"configurable": {"user_id": request.user_id}}
+    )
 
-    # 4. 구조화된 응답 추출 및 반환
+    # 5. 구조화된 응답 추출
     structured = result["structured_response"]
     response_data = structured.model_dump()
+    
+    # 6. 백그라운드 태스크로 DB에 새 대화 저장 및 롤링 요약 실행 (응답 지연 없음)
+    # response_data 전체(JSON)를 저장하면 토큰이 기하급수적으로 폭발하므로, 
+    # AI가 사용자에게 실제로 한 말(text 또는 question)만 추출해서 맥락으로 저장합니다.
+    if response_data["type"] == "reply":
+        ai_text_to_save = response_data["content"]["text"]
+    else:
+        ai_text_to_save = response_data["content"]["question"]
+        
+    background_tasks.add_task(save_and_summarize, request.user_id, chat_id, last_user_message, ai_text_to_save)
 
     return {
         "session_id": request.user_id,

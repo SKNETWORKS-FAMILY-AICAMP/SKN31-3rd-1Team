@@ -35,7 +35,7 @@ from typing import List, Literal, Optional, Union
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.agents.structured_output import ToolStrategy
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 
 # ------------------------------------------------------------------
@@ -70,14 +70,18 @@ from graph_db.graph_search_tool import (
     get_sigungu_list,
     flexible_graph_search,
 )
+from server.family_tool import query_family_info
 
 load_dotenv()
 
-_MODEL_NAME = "gpt-5.4-mini"
+_MODEL_NAME = "gemini-3.1-flash-lite"
 
 # 에이전트에게 쥐여줄 tool 전체 목록.
 # LLM이 질문 내용을 보고 이 중에서 스스로 골라서 부른다 (우리가 코드로 분기하지 않음).
 TOOLS = [
+    # --- 환자 가족 정보 조회 (Supabase, 1개) ---
+    query_family_info,               # 사용자가 등록한 가족(대상자)의 신상정보와 기존에 파악된 상태를 조회함.
+
     # --- 증상/가이드라인 검색 (VectorDB, 1개) ---
     search_dementia_guideline,       # 치매 증상·검진 절차·비용 지원 등을 물으면 관련 자료를 찾아줌.
                                       # 예: search_dementia_guideline(query, top_k=4)
@@ -335,7 +339,7 @@ def build_agent():
     if _agent_instance is not None:
         return _agent_instance
 
-    llm = ChatOpenAI(model=_MODEL_NAME)
+    llm = ChatGoogleGenerativeAI(model=_MODEL_NAME)
     # 주의: response_format 에는 스키마(Union이든 리스트든)를 "날것 그대로"
     # 넘기면 안 된다. 반드시 ToolStrategy 또는 ProviderStrategy 로
     # 명시적으로 감싸야 한다. (langchain 1.0부터 스키마 직접 전달은

@@ -58,6 +58,7 @@ from pydantic import BaseModel, Field
 # 그대로 근거로 삼아 답변 문장만 만들면 된다.
 # ------------------------------------------------------------------
 from vector_db.vector_search_tool import search_dementia_guideline
+from modules.extractor import propose_state_change
 from graph_db.graph_search_tool import (
     get_centers_by_sido,
     get_centers_by_sigungu,
@@ -82,6 +83,9 @@ TOOLS = [
     search_dementia_guideline,       # 치매 증상·검진 절차·비용 지원 등을 물으면 관련 자료를 찾아줌.
                                       # 예: search_dementia_guideline(query, top_k=4)
 
+    # --- 사용자 상태 정보 추출 (Extractor, 1개) ---
+    propose_state_change,            # 대화 중 언급된 환자 정보(증상, 나이, 지역 등)를 파악하여 상태 업데이트를 제안함.\
+    
     # --- 치매안심센터 검색 (GraphDB, 10개) : 자주 쓸 것들 ---
     get_centers_by_sido,             # "서울에 센터 뭐 있어?" -> 시/도 단위 센터 조회
     get_centers_by_sigungu,          # "강남구 센터 알려줘"   -> 시군구 단위 센터 조회

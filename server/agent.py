@@ -58,6 +58,8 @@ from pydantic import BaseModel, Field
 # 그대로 근거로 삼아 답변 문장만 만들면 된다.
 # ------------------------------------------------------------------
 from vector_db.vector_search_tool import search_dementia_guideline
+from server.extractor import propose_state_change
+from server.family_tool import query_family_info
 from graph_db.graph_search_tool import (
     get_centers_by_sido,
     get_centers_by_sigungu,
@@ -70,7 +72,6 @@ from graph_db.graph_search_tool import (
     get_sigungu_list,
     flexible_graph_search,
 )
-from server.family_tool import query_family_info
 
 load_dotenv()
 
@@ -79,13 +80,14 @@ _MODEL_NAME = "gemini-3.1-flash-lite"
 # 에이전트에게 쥐여줄 tool 전체 목록.
 # LLM이 질문 내용을 보고 이 중에서 스스로 골라서 부른다 (우리가 코드로 분기하지 않음).
 TOOLS = [
-    # --- 환자 가족 정보 조회 (Supabase, 1개) ---
-    query_family_info,               # 사용자가 등록한 가족(대상자)의 신상정보와 기존에 파악된 상태를 조회함.
-
+    query_family_info,               # 환자 가족 정보 조회
     # --- 증상/가이드라인 검색 (VectorDB, 1개) ---
     search_dementia_guideline,       # 치매 증상·검진 절차·비용 지원 등을 물으면 관련 자료를 찾아줌.
                                       # 예: search_dementia_guideline(query, top_k=4)
 
+    # --- 사용자 상태 정보 추출 (Extractor, 1개) ---
+    propose_state_change,            # 대화 중 언급된 환자 정보(증상, 나이, 지역 등)를 파악하여 상태 업데이트를 제안함.\
+    
     # --- 치매안심센터 검색 (GraphDB, 10개) : 자주 쓸 것들 ---
     get_centers_by_sido,             # "서울에 센터 뭐 있어?" -> 시/도 단위 센터 조회
     get_centers_by_sigungu,          # "강남구 센터 알려줘"   -> 시군구 단위 센터 조회

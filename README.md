@@ -87,8 +87,10 @@ SKN31-3rd-1Team/
 │   └── vector_search_tool.py   
 │
 ├── modules/                     # LangGraph 파이프라인 (에이전트, State, 그래프 구성)
-    └── state.py                 
-                 
+│   └── state.py      
+│
+├── server/                      # FastAPI 서버
+│   └── main.py          
 ```
 
 

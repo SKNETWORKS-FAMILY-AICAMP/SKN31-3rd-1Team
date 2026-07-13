@@ -17,7 +17,7 @@
 
 ### 1.3 기술 스택 🛠
 
-<p align="center">
+<p>
 
 <img src="https://skillicons.dev/icons?i=python,fastapi,nextjs,vercel,supabase" />
 <br><br>
@@ -40,7 +40,7 @@
 ### 1.4 WBS
 
 <div align="center">
-<img src="산출물/images/wbs.png" width="800" height="430">
+<img src="산출물/images/wbs.svg" width="1000">
 </div>
 
 

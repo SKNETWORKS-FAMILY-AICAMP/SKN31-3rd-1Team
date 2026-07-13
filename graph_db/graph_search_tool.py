@@ -124,7 +124,11 @@ def _format_centers(rows: list[dict], truncated: bool = False, limit: int = RESU
         name = r.get("name", "이름 없음")
         addr = r.get("주소", "")
         phone = r.get("전화번호", "")
-        blocks.append(f"[{i}] {name} | 주소: {addr} | 전화번호: {phone}")
+        website = r.get("홈페이지", "")
+        line = f"[{i}] {name} | 주소: {addr} | 전화번호: {phone}"
+        if website:
+            line += f" | 홈페이지: {website}"
+        blocks.append(line)
     text = "\n".join(blocks)
     if truncated:
         text += f"\n\n(조건에 맞는 센터가 {limit}개보다 많아 상위 {limit}개만 표시했습니다. 지역을 더 좁혀서 다시 물어보시면 전체를 확인하실 수 있습니다.)"
@@ -153,7 +157,7 @@ def get_centers_by_sido(sido: str) -> str:
     rows, truncated = _run_query_capped(
         """
         MATCH (c:치매안심센터)-[:LOCATED_IN]->(:시군구)-[:LOCATED_IN]->(sd:시도 {name: $sido})
-        RETURN c.name AS name, c.주소 AS 주소, c.전화번호 AS 전화번호
+        RETURN c.name AS name, c.주소 AS 주소, c.전화번호 AS 전화번호, c.홈페이지 AS 홈페이지
         LIMIT $limit
         """,
         sido=sido,
@@ -180,7 +184,7 @@ def get_centers_by_sigungu(sido: str, sigungu: str) -> str:
     rows, truncated = _run_query_capped(
         """
         MATCH (c:치매안심센터)-[:LOCATED_IN]->(sg:시군구 {시도: $sido, name: $sigungu})
-        RETURN c.name AS name, c.주소 AS 주소, c.전화번호 AS 전화번호
+        RETURN c.name AS name, c.주소 AS 주소, c.전화번호 AS 전화번호, c.홈페이지 AS 홈페이지
         LIMIT $limit
         """,
         sido=sido,
@@ -250,7 +254,7 @@ def search_center_by_name(keyword: str) -> str:
         """
         MATCH (c:치매안심센터)
         WHERE c.name CONTAINS $keyword
-        RETURN c.name AS name, c.주소 AS 주소, c.전화번호 AS 전화번호, c.유형 AS 유형
+        RETURN c.name AS name, c.주소 AS 주소, c.전화번호 AS 전화번호, c.유형 AS 유형, c.홈페이지 AS 홈페이지
         LIMIT $limit
         """,
         keyword=keyword,
@@ -259,9 +263,10 @@ def search_center_by_name(keyword: str) -> str:
         return "조건에 맞는 치매안심센터를 찾지 못했습니다."
     blocks = []
     for i, r in enumerate(rows, start=1):
-        blocks.append(
-            f"[{i}] {r['name']} ({r.get('유형', '')}) | 주소: {r.get('주소', '')} | 전화번호: {r.get('전화번호', '')}"
-        )
+        line = f"[{i}] {r['name']} ({r.get('유형', '')}) | 주소: {r.get('주소', '')} | 전화번호: {r.get('전화번호', '')}"
+        if r.get("홈페이지"):
+            line += f" | 홈페이지: {r['홈페이지']}"
+        blocks.append(line)
     text = "\n".join(blocks)
     if truncated:
         text += f"\n\n(조건에 맞는 센터가 {RESULT_LIMIT_DEFAULT}개보다 많아 상위 {RESULT_LIMIT_DEFAULT}개만 표시했습니다. 검색어를 더 구체적으로 좁혀서 다시 물어보시면 전체를 확인하실 수 있습니다.)"
@@ -317,7 +322,7 @@ def get_centers_by_operator(operator_name: str) -> str:
     rows, truncated = _run_query_capped(
         """
         MATCH (o:운영기관 {name: $operator_name})-[:MANAGES]->(c:치매안심센터)
-        RETURN c.name AS name, c.주소 AS 주소, c.전화번호 AS 전화번호
+        RETURN c.name AS name, c.주소 AS 주소, c.전화번호 AS 전화번호, c.홈페이지 AS 홈페이지
         LIMIT $limit
         """,
         operator_name=operator_name,
@@ -380,7 +385,7 @@ def get_centers_by_program(program_keyword: str) -> str:
         """
         MATCH (c:치매안심센터)-[:PROVIDES]-(p:프로그램)
         WHERE p.name CONTAINS $program_keyword
-        RETURN DISTINCT c.name AS name, c.주소 AS 주소, c.전화번호 AS 전화번호
+        RETURN DISTINCT c.name AS name, c.주소 AS 주소, c.전화번호 AS 전화번호, c.홈페이지 AS 홈페이지
         LIMIT $limit
         """,
         program_keyword=program_keyword,

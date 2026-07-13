@@ -12,7 +12,8 @@
 | :---: | :---: | :---: | :---: | :---: |
 | <a href="https://github.com/ujneg18-source"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/dksdudtjs94"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/yeona9549"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/hyomin0357"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/Uranium10"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> |
 | <img src="산출물/images/슬픔이.png" width="150" height="150"> | <img src="산출물/images/버럭이.png" width="150" height="150"> | <img src="산출물/images/부럽이.png" width="150" height="150"> | <img src="산출물/images/기쁨이.png" width="150" height="150"> | <img src="산출물/images/당황이.png" width="150" height="150"> |
-| **PM · DB설계 - GraphDB**<br>데이터 수집 및 전처리<br>Neo4j 세팅 · Agent Tool 개발 | **DB설계 - VectorDB**<br>데이터 수집 및 전처리<br>Qdrant 임베딩 및 세팅 · Agent Tool 개발 | **백엔드**<br>LangChain 파이프라인 설계 및 구현<br>prompt 설계 · AI Agent 구현 | **백엔드**<br>LangChain 파이프라인 설계 및 구현<br>prompt 설계 · AI Agent 구현 | **프론트엔드**<br>웹 UI 구현 (챗봇 인터페이스)<br>백엔드 API 연동 |
+| <sub>**PM · DB설계 - GraphDB**</sub><br><sub>데이터 수집 및 전처리<br>Neo4j 세팅 · Agent Tool 개발</sub> | <sub>**DB설계 - VectorDB**</sub><br><sub>데이터 수집 및 전처리<br>Qdrant 임베딩 및 세팅 · Agent Tool 개발</sub> | <sub>**백엔드**</sub><br><sub>LangChain 파이프라인 설계 및 구현<br>prompt 설계 · AI Agent 구현</sub> | <sub>**백엔드**</sub><br><sub>LangChain 파이프라인 설계 및 구현<br>prompt 설계 · AI Agent 구현</sub> | <sub>**프론트엔드**</sub><br><sub>웹 UI 구현 (챗봇 인터페이스)<br>백엔드 API 연동</sub> |
+
 
 
 ### 1.3 기술 스택 🛠
@@ -40,7 +41,7 @@
 ### 1.4 WBS
 
 <div align="center">
-<img src="산출물/images/wbs.svg" width="1000">
+<img src="산출물/images/WBS.svg" width="1000">
 </div>
 
 

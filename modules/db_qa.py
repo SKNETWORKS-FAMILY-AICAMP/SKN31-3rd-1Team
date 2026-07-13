@@ -24,6 +24,8 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 
+from tools.vector_search_tool import search_dementia_guideline
+
 # override=True: OS에 같은 이름의 환경변수가 이미 있어도 .env 값으로 덮어쓴다.
 # (테스트 중 예전 값이 남아있어서 헷갈리는 걸 방지)
 load_dotenv(override=True)

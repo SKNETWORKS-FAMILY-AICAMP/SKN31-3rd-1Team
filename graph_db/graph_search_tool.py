@@ -22,6 +22,17 @@
 노드 식별 프로퍼티는 전부 name으로 통일되어 있다
 (:시도, :시군구, :치매안심센터, :운영기관, :프로그램 전부 name).
 
+프로퍼티 타입 요약 (:치매안심센터 기준, fallback의 cypher_prompt에도 동일하게 명시됨):
+    int    : 의사인원수, 간호사인원수, 사회복지사인원수, 인원_작업치료사,
+             인원_운동치료사, 인원_임상심리사, 인원_음악치료사, 인원_행정인력,
+             인원_송영인력, 인원_기타, 우편번호
+    float  : 경도, 위도 (위치 정밀도이므로 반올림/정수화 금지)
+    string : 전화번호, 팩스번호, 홈페이지, 주소, 유형, name
+             (:운영기관)의 홈페이지/대표자명/전화번호와
+             (:시도, :시군구, :운영기관, :프로그램)의 name도 전부 string.
+    주의: 인원수 필드의 0은 "해당 인력 미배정"을 뜻하는 정상 값이며
+          NULL(데이터 없음)과 다르다.
+
 LangChain의 @tool 데코레이터를 사용해 LangGraph 에이전트(ToolNode 등)에
 그대로 bind 할 수 있도록 구성.
 """
@@ -288,19 +299,22 @@ def get_operator_by_center(center_name: str) -> str:
         center_name: 정확한 센터명 (예: "서울특별시강남구치매안심센터")
 
     Returns:
-        운영기관명/대표자명/전화번호가 포함된 텍스트. 없으면 안내 문구.
+        운영기관명/대표자명/전화번호/홈페이지가 포함된 텍스트. 없으면 안내 문구.
     """
     rows = _run_query(
         """
         MATCH (c:치매안심센터 {name: $center_name})-[:MANAGES]-(o:운영기관)
-        RETURN o.name AS name, o.대표자명 AS 대표자명, o.전화번호 AS 전화번호
+        RETURN o.name AS name, o.대표자명 AS 대표자명, o.전화번호 AS 전화번호, o.홈페이지 AS 홈페이지
         """,
         center_name=center_name,
     )
     if not rows:
         return f"'{center_name}'의 운영기관 정보를 찾지 못했습니다."
     r = rows[0]
-    return f"{r['name']} (대표자: {r.get('대표자명', '정보없음')}, 전화번호: {r.get('전화번호', '정보없음')})"
+    text = f"{r['name']} (대표자: {r.get('대표자명', '정보없음')}, 전화번호: {r.get('전화번호', '정보없음')})"
+    if r.get("홈페이지"):
+        text += f" | 홈페이지: {r['홈페이지']}"
+    return text
 
 
 @tool
@@ -347,12 +361,15 @@ def get_programs_by_center(center_name: str) -> str:
         center_name: 정확한 센터명 (예: "서울특별시강남구치매안심센터")
 
     Returns:
-        프로그램명을 쉼표로 구분한 문자열. 없으면 안내 문구.
+        프로그램명을 쉼표로 구분한 문자열 + (있다면) 센터 홈페이지 안내.
+        프로그램 자체는 별도 URL이 없으므로, 프로그램별 링크 대신 그 프로그램을
+        제공하는 센터의 홈페이지를 한 번만 안내한다 (LLM이 프로그램마다 없는
+        링크를 지어내는 것을 막기 위함). 없으면 안내 문구.
     """
     rows, truncated = _run_query_capped(
         """
         MATCH (c:치매안심센터 {name: $center_name})-[:PROVIDES]->(p:프로그램)
-        RETURN p.name AS name
+        RETURN p.name AS name, c.홈페이지 AS 센터홈페이지
         LIMIT $limit
         """,
         center_name=center_name,
@@ -360,6 +377,9 @@ def get_programs_by_center(center_name: str) -> str:
     if not rows:
         return f"'{center_name}'의 프로그램 정보를 찾지 못했습니다."
     text = ", ".join(r["name"] for r in rows)
+    center_website = rows[0].get("센터홈페이지")
+    if center_website:
+        text += f"\n\n(각 프로그램의 상세 일정·신청 방법은 프로그램 자체 페이지가 아니라 센터 홈페이지에서 확인하세요: {center_website})"
     if truncated:
         text += f" (그 외에도 더 있어 상위 {RESULT_LIMIT_DEFAULT}개만 표시했습니다.)"
     return text
@@ -404,6 +424,9 @@ def _get_fallback_chain() -> GraphCypherQAChain:
 
     cypher_prompt.py와 동일한 방향 규칙(관계 5종 정방향 + 역방향 질문 예시)을
     그대로 사용해, 이 fallback 경로에서도 방향 오류가 재발하지 않도록 한다.
+    추가로 인원수/우편번호(int)와 경도/위도(float) 등 숫자 필드를 문자열로 잘못 비교해
+    조건절이 조용히 실패하는 것을 막기 위해 프로퍼티 타입 규칙을 프롬프트에
+    명시한다 ("의사가 2명 이상인 센터" 같은 통계성 질문 대응용).
 
     Returns:
         GraphCypherQAChain 인스턴스
@@ -432,6 +455,30 @@ def _get_fallback_chain() -> GraphCypherQAChain:
 역방향처럼 보이는 질문 처리 규칙:
 질문이 저장된 방향과 반대로 묻더라도, 새로운 관계를 만들려 하지 말고
 화살표를 생략한 패턴(-[:REL]-)으로 기존 관계를 그대로 타고 가서 조회하세요.
+
+프로퍼티 타입 규칙 (반드시 지켜야 함, {schema}가 float/int를 정확히 구분해주지
+못하는 경우가 있으므로 아래를 우선한다):
+- (:치매안심센터)의 인원 관련 필드는 정수(int)로 저장되어 있다:
+  의사인원수, 간호사인원수, 사회복지사인원수, 인원_작업치료사, 인원_운동치료사,
+  인원_임상심리사, 인원_음악치료사, 인원_행정인력, 인원_송영인력, 인원_기타
+  → 조건절에 쓸 때는 따옴표로 감싸지 말고 숫자 그대로 비교한다.
+    예: WHERE c.의사인원수 >= 2  (WHERE c.의사인원수 >= "2" 아님)
+  → 값이 0인 경우와 값이 없는(NULL) 경우는 다르다. 0은 "해당 인력이 배정되어
+    있지 않음"을 뜻하는 정상 값이고, NULL은 "데이터 자체가 없음"을 뜻한다.
+    "의사가 없는 센터"처럼 물으면 c.의사인원수 = 0을 찾아야 하며, 이를
+    IS NULL과 혼동하지 않는다.
+- (:치매안심센터)의 우편번호도 정수(int)로 저장되어 있다. 동일하게 숫자로 비교한다.
+- (:치매안심센터)의 경도, 위도는 float으로 저장되어 있다 (소수점이 위치 정밀도
+  자체이므로 정수로 반올림하지 않는다).
+- (:치매안심센터)의 전화번호, 팩스번호, 홈페이지, 주소, 유형, name과
+  (:운영기관)의 홈페이지, 대표자명, 전화번호와
+  (:시도, :시군구, :운영기관, :프로그램)의 name은 전부 문자열(string)이다.
+  → 이 필드들은 반드시 따옴표로 감싸서 비교한다.
+
+링크 규칙 (반드시 지켜야 함):
+- 프로그램(:프로그램) 노드는 홈페이지/URL 프로퍼티가 없다. 프로그램 관련
+  답변에서 링크가 필요하면 그 프로그램을 제공하는 센터의 홈페이지를
+  사용하고, URL이 없는 항목을 절대 링크로 만들지 않는다.
 
 질문: {question}
 Cypher 쿼리:"""
@@ -469,6 +516,12 @@ def flexible_graph_search(query: str) -> str:
 
     이 tool은 내부적으로 LLM이 질문마다 새 Cypher를 즉석 생성하므로, 위 9개
     tool보다 방향 오류 등의 위험이 있다. 9개로 답이 되는 질문에는 쓰지 않는다.
+
+    주의 (링크 관련): (:프로그램) 노드는 홈페이지/URL 프로퍼티가 없다.
+    "OO 프로그램 안내 링크 줘" 같은 질문이라도 이 tool로 오면 안 되고,
+    get_programs_by_center 또는 get_centers_by_program을 사용해야 한다.
+    이 두 tool은 프로그램 자체에 없는 링크 대신, 그 프로그램을 제공하는
+    센터의 실제 홈페이지를 안내하도록 이미 구현되어 있다.
 
     Args:
         query: 사용자의 원본 질문(자연어)

@@ -2,6 +2,48 @@
 
 graph_db/, vector_db/, modules/(LangGraph 파이프라인)에서 공통으로 쓰는
 모델명, 경로, DB 접속 정보 등을 모아둔다.
+
+============================================================
+[신규 팀원 온보딩 가이드]
+============================================================
+
+1. 가상환경 세팅
+   uv venv .venv
+   .venv\\Scripts\\activate   (Windows)
+   uv pip install -r requirements.txt
+
+2. .env 파일 생성 위치: 이 config.py와 같은 폴더 (프로젝트 루트)
+
+   아래 키들을 채워야 한다. 실제 값은 이 파일이나 Git에 절대 커밋하지 말고,
+   팀 채널/1Password 등으로 개별 전달받을 것.
+
+       LLM_MODEL=gpt-5.4-mini
+       FALLBACK_LLM_MODEL=              (비워두면 LLM_MODEL과 동일하게 사용)
+       EMBEDDING_MODEL=BAAI/bge-m3
+
+       NEO4J_URI=neo4j+s://19f5f7c5.databases.neo4j.io
+       NEO4J_USERNAME=neo4j
+       NEO4J_PASSWORD=<발급받은 비밀번호>
+       NEO4J_DATABASE=neo4j
+
+       QDRANT_URL=https://<cluster-id>.<region>.aws.cloud.qdrant.io
+       QDRANT_API_KEY=<발급받은 키>
+
+       SUPABASE_URL=<Supabase 프로젝트 URL>
+       SUPABASE_KEY=<Supabase API 키>
+
+3. DB 접속 방법
+   - Qdrant: https://cloud.qdrant.io 로그인 → 클러스터 선택 → Dashboard에서
+     URL / API Key 확인 (API Key는 최초 생성 시 1회만 노출되므로 분실 시 재발급)
+   - Neo4j: https://console.neo4j.io 접속 → Gmail로 온 초대메일에서
+     Accept 클릭 → 인스턴스 접속
+
+4. 가이드라인: 각자 담당 폴더의 md 파일을 읽고 시작할 것
+5. AI 코딩 도구(Claude Code) 사용 시: CLAUDE.md를 먼저 읽힌 뒤 코딩 시작
+
+============================================================
+[아래부터 실제 전역 상수 정의]
+============================================================
 """
 
 import os

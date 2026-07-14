@@ -23,7 +23,6 @@
 <br><br>
 
 <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
-<img src="https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white"/>
 <img src="https://img.shields.io/badge/LangChain-ReAct_Agent-1C3C3C?style=for-the-badge"/>
 <img src="https://img.shields.io/badge/LangGraph-4B5563?style=for-the-badge"/>
 <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white"/>

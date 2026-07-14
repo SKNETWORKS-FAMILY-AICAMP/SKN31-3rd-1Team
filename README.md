@@ -11,7 +11,7 @@
 | :---: | :---: | :---: | :---: | :---: |
 | <a href="https://github.com/ujneg18-source"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/dksdudtjs94"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/yeona9549"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/hyomin0357"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/Uranium10"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> |
 | <img src="산출물/images/슬픔이.png" width="150" height="150"> | <img src="산출물/images/버럭이.png" width="150" height="150"> | <img src="산출물/images/부럽이.png" width="150" height="150"> | <img src="산출물/images/기쁨이.png" width="150" height="150"> | <img src="산출물/images/당황이.png" width="150" height="150"> |
-| **PM · GraphDB 설계**<br><sub>데이터 수집 및 전처리</sub><br><sub>Agent Tool 개발</sub> | **VectorDB 설계**<br><sub>데이터 수집 및 전처리</sub><br><sub>Agent Tool 개발</sub> | **백엔드**<br><sub>LangGraph 기반 AI Agent 설계</sub><br><sub>프롬프트 엔지니어링</sub> | **백엔드**<br><sub>LangGraph 기반 AI Agent 설계</sub><br><sub>프롬프트 엔지니어링</sub> | **프론트엔드**<br><sub>웹 UI 구현 (챗봇 인터페이스)</sub><br><sub>백엔드 API 연동</sub> |
+| **PM · GraphDB 설계**<br><sub>데이터 수집 및 전처리</sub><br><sub>Agent Tool 개발</sub> | **VectorDB 설계**<br><sub>데이터 수집 및 전처리</sub><br><sub>Agent Tool 개발</sub> | **백엔드**<br><sub>LangGraph·AI Agent 설계</sub><br><sub>프롬프트 엔지니어링</sub> | **백엔드**<br><sub>LangGraph·AI Agent 설계</sub><br><sub>프롬프트 엔지니어링</sub> | **프론트엔드**<br><sub>웹 UI 구현 (챗봇 인터페이스)</sub><br><sub>백엔드 API 연동</sub> |
 
 
 
@@ -134,6 +134,7 @@ SKN31-3nd-1Team/
 
 ## 4. 수집 데이터 설명
 - [데이터 수집 및 전처리 문서](./산출물/데이터수집및전처리문서.md)
+- 문서보고 간략하게 요약
 
 
 ---
@@ -141,12 +142,14 @@ SKN31-3nd-1Team/
 ## 5. Application의 주요 기능
 
 - [시스템 아키텍처 및 DB 설계](./산출물/시스템아키텍쳐.md)
+- 문서보고 간략하게 요약 or 시연영상 or 사진
 
 ---
 
 ## ６. 성능 평가
 
 - [성능 평가](./산출물/성능평가.md)
+- 모델 선정이유 or 문서보고 간략하게 요약
 
 
 ---

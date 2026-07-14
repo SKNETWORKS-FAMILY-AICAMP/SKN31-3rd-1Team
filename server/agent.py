@@ -152,7 +152,22 @@ SOURCE_EXTRACTION_PROMPT = """당신은 앞서 생성된 답변의 출처를 찾
 2. 도구 결과에 없는 임의의 URL이나 제목을 지어내지 마세요.
 3. 센터 정보의 경우, 도구 결과에 'URL: ...' 로 명시된 링크가 있으면 넣고, 없으면 url 필드를 아예 생략하세요.
 4. 인사말, 공감, 단순 안내 등 근거가 전혀 필요 없는 텍스트라면 빈 배열 [] 을 반환하세요.
+5. '운영기관'과 관련된 내용은 출처 목록에서 완전히 제외하세요.
+6. 동일한 센터나 기관에 대해 중복된 출처를 생성하지 마세요. 링크가 있는 센터 정보 하나만 남기고 병합하세요.
 """
+
+CHOICES_REWRITE_PROMPT = """당신은 치매 상담 챗봇의 보조 에이전트입니다.
+AI가 정보를 추가로 얻기 위해 사용자에게 질문(choices)을 던지려고 합니다.
+제공된 '이전 대화 내역'과 'AI가 방금 생성한 질문'을 보고, 이 질문이 너무 기계적이거나, 사용자가 방금 말한 내용을 앵무새처럼 반복하는 어색한 질문인지 검사하세요.
+
+규칙:
+1. 만약 사용자의 직전 대답과 AI의 새 질문이 거의 똑같다면(예: 사용자: "최근에 더 나빠지셨나요?", AI: "최근에 더 나빠지셨나요?"), 직전 대답에 자연스럽게 공감하며 넘어가는 부드러운 대화체로 수정하세요. (예: "어머니께서 최근 갑자기 나빠지셨군요. 그렇다면...")
+2. 질문이 이미 자연스럽다면 굳이 수정하지 말고 그대로 반환하세요.
+3. 수정된 '질문 문자열(String)' 하나만 반환하세요.
+"""
+
+class RewrittenQuestion(BaseModel):
+    question: str = Field(description="자연스럽게 수정된 질문 문자열")
 
 # =========================================================
 # Graph State
@@ -221,16 +236,46 @@ def source_extraction_node(state: GraphState):
         "final_response": final_response
     }
 
-def pass_through_node(state: GraphState):
+def choices_rewrite_node(state: GraphState):
+    response = state["structured_response"]
+    
+    if getattr(response, "type", None) == "choices":
+        original_question = response.content.question
+        
+        chat_history = []
+        for msg in state["messages"]:
+            if isinstance(msg, HumanMessage):
+                chat_history.append(f"User: {msg.content}")
+            elif isinstance(msg, AIMessage) and isinstance(msg.content, str) and msg.content:
+                chat_history.append(f"AI: {msg.content}")
+        
+        history_text = "\n".join(chat_history[-4:])
+        
+        llm = ChatGoogleGenerativeAI(model=_MODEL_NAME).with_structured_output(RewrittenQuestion)
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", CHOICES_REWRITE_PROMPT),
+            ("user", "이전 대화 내역:\n{history_text}\n\nAI가 생성한 질문:\n{original_question}")
+        ])
+        
+        chain = prompt | llm
+        try:
+            rewritten = chain.invoke({
+                "history_text": history_text,
+                "original_question": original_question
+            })
+            response.content.question = rewritten.question
+        except Exception as e:
+            pass # 보조 LLM 실패 시 원본 질문 유지
+
     return {
-        "final_response": state["structured_response"]
+        "final_response": response
     }
 
 def route_after_generation(state: GraphState):
     response = state["structured_response"]
     if getattr(response, "type", None) == "reply":
         return "source_extraction"
-    return "pass_through"
+    return "choices_rewrite"
 
 # =========================================================
 # Graph Compilation
@@ -243,7 +288,7 @@ def build_agent():
         builder = StateGraph(GraphState)
         builder.add_node("generation", generation_node)
         builder.add_node("source_extraction", source_extraction_node)
-        builder.add_node("pass_through", pass_through_node)
+        builder.add_node("choices_rewrite", choices_rewrite_node)
         
         builder.add_edge(START, "generation")
         builder.add_conditional_edges(
@@ -251,11 +296,11 @@ def build_agent():
             route_after_generation,
             {
                 "source_extraction": "source_extraction",
-                "pass_through": "pass_through"
+                "choices_rewrite": "choices_rewrite"
             }
         )
         builder.add_edge("source_extraction", END)
-        builder.add_edge("pass_through", END)
+        builder.add_edge("choices_rewrite", END)
         
         _graph_instance = builder.compile()
     return _graph_instance

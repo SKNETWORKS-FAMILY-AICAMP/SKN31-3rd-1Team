@@ -30,7 +30,7 @@ CYPHER_GENERATION_TEMPLATE = """당신은 Neo4j Cypher 쿼리 전문가입니다
 
 관계 방향 규칙 (반드시 지켜야 함, 저장된 방향은 아래가 전부이며 역방향 관계는 별도로 존재하지 않음):
 - (:치매안심센터)-[:LOCATED_IN]->(:시군구)
-- (:시군구)-[:CONTAINS]->(:시도)
+- (:시도)-[:CONTAINS]->(:시군구)
 - (:시군구)-[:LOCATED_IN]->(:시도)
 - (:운영기관)-[:MANAGES]->(:치매안심센터)
 - (:치매안심센터)-[:PROVIDES]->(:프로그램)
@@ -41,7 +41,7 @@ CYPHER_GENERATION_TEMPLATE = """당신은 Neo4j Cypher 쿼리 전문가입니다
 화살표를 생략한 패턴(-[:REL]-)으로 기존 관계를 그대로 타고 가서 조회하세요.
 
 올바른 예시 1 (정방향 - 지역 기준 센터 조회):
-MATCH (c:치매안심센터)-[:LOCATED_IN]->(sg:시군구)-[:CONTAINS]->(sd:시도 {{name: '서울특별시'}})
+MATCH (c:치매안심센터)-[:LOCATED_IN]->(sg:시군구)-[:LOCATED_IN]->(sd:시도 {{name: '서울특별시'}})
 WHERE sg.name = '강남구'
 RETURN c.name, c.주소, c.전화번호
 

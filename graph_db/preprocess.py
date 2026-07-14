@@ -14,6 +14,27 @@ import os
 pd.set_option('future.no_silent_downcasting', True)
 
 # ============================================================
+# 공통 정규화 헬퍼
+# ============================================================
+def normalize_phone(phone):
+    """전화번호를 숫자만 남겨 비교 가능한 형태로 정규화 (하이픈/공백/표기차이 제거)"""
+    if pd.isna(phone):
+        return None
+    digits = re.sub(r'\D', '', str(phone))
+    return digits if digits else None
+
+def normalize_homepage(url):
+    """홈페이지 URL에 프로토콜(https://)이 없으면 붙여준다"""
+    if pd.isna(url):
+        return None
+    u = str(url).strip()
+    if not u:
+        return None
+    if not re.match(r'^https?://', u, flags=re.IGNORECASE):
+        u = 'https://' + u
+    return u
+
+# ============================================================
 # 경로 설정 (data/ 가 graph_db/ 폴더 안에 있음: graph_db/data/raw, graph_db/data/processed)
 # ============================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -42,6 +63,7 @@ df1['주소'] = df1['주소1'].fillna('') + ' ' + df1['주소2'].fillna('')
 df1['주소'] = df1['주소'].str.strip()
 df1 = df1.drop(columns=['주소1', '주소2'])
 df1 = df1.rename(columns={'개소일': '설립일'})
+df1['홈페이지'] = df1['홈페이지'].apply(normalize_homepage)
 
 df2 = df2[['치매센터명', '치매센터유형', '소재지도로명주소', '위도', '경도',
            '설립연월', '의사인원수', '간호사인원수', '사회복지사인원수', '기타인원현황',
@@ -318,6 +340,35 @@ centers_merged.insert(0, '센터ID', ['C' + str(i + 1).zfill(4) for i in range(l
 centers_merged['기타인원_파싱_JSON'] = centers_merged['기타인원_파싱'].apply(lambda d: json.dumps(d, ensure_ascii=False))
 centers_merged['프로그램_리스트_텍스트'] = centers_merged['프로그램_리스트'].apply(lambda l: ' | '.join(l))
 
+# ------------------------------------------------------------
+# 7-1. 전화번호 기준 중복 센터 제거
+#   파일1<->파일2 매칭이 실패해서(이름/좌표 임계값 밖) 같은 센터가
+#   '파일1 매칭분'과 '파일2 단독분' 양쪽에 중복으로 들어간 경우를 잡아낸다.
+#   전화번호가 표기(하이픈/공백) 달라도 같은 번호면 같은 센터로 간주.
+# ------------------------------------------------------------
+centers_merged['_전화_norm'] = centers_merged['전화번호'].apply(normalize_phone)
+
+before_n = len(centers_merged)
+# 데이터출처가 '파일1' 또는 '파일1+파일2'인 행을 우선 보존(원본 유지), 나머지 중복은 제거
+centers_merged['_priority'] = centers_merged['데이터출처'].map({'파일1+파일2': 0, '파일1': 1, '파일2': 2})
+centers_merged = centers_merged.sort_values('_priority')
+dup_mask = centers_merged['_전화_norm'].notna() & centers_merged.duplicated(subset='_전화_norm', keep='first')
+n_dup = dup_mask.sum()
+if n_dup > 0:
+    print(f'[중복 제거] 전화번호 기준 중복 센터 {n_dup}건 제거')
+    print(centers_merged.loc[dup_mask, ['센터명', '전화번호', '데이터출처']].to_string(index=False))
+centers_merged = centers_merged[~dup_mask].drop(columns=['_전화_norm', '_priority']).sort_values('센터ID').reset_index(drop=True)
+print(f'[중복 제거] {before_n}행 -> {len(centers_merged)}행')
+
+# ------------------------------------------------------------
+# 7-2. 안심센터 홈페이지 결측 검증 (병합 후)
+# ------------------------------------------------------------
+missing_hp = centers_merged['홈페이지'].isna() | (centers_merged['홈페이지'].astype(str).str.strip() == '')
+n_missing_hp = missing_hp.sum()
+print(f'[검증] 병합 후 홈페이지 결측 센터: {n_missing_hp} / {len(centers_merged)}')
+if n_missing_hp > 0:
+    print(centers_merged.loc[missing_hp, ['센터ID', '센터명', '데이터출처']].to_string(index=False))
+
 # 검수용 CSV 저장 (기타인원_파싱/프로그램_리스트 원본 dict/list 컬럼은 제외하고 텍스트화된 것만)
 review_cols = ['센터ID', '센터명', '시도', '시군구', '유형', '주소', '우편번호', '위도', '경도',
                '전화번호', '팩스번호', '홈페이지', '설립일', '의사인원수', '간호사인원수', '사회복지사인원수',
@@ -346,18 +397,85 @@ nodes_center = centers_merged[['센터ID', '센터명', '유형', '시도', '시
                                 '위도', '경도', '전화번호', '팩스번호', '홈페이지', '설립일',
                                 '의사인원수', '간호사인원수', '사회복지사인원수']].copy()
 nodes_center = nodes_center.rename(columns={'센터명': 'name'})
+# 인원수 필드: float(NaN포함) -> nullable Int64로 캐스팅 (Neo4j 적재 시 toInteger() 불필요하도록)
+for col in ['의사인원수', '간호사인원수', '사회복지사인원수']:
+    nodes_center[col] = pd.to_numeric(nodes_center[col], errors='coerce').round().astype('Int64')
+
+# 우편번호: 앞자리 0이 유효한 값(예: 06153)이므로 int로 캐스팅하면 정보 손실 -> 5자리 zero-pad 문자열로 유지
+def zeropad_zip(v):
+    if pd.isna(v):
+        return None
+    return str(int(round(float(v)))).zfill(5)
+nodes_center['우편번호'] = nodes_center['우편번호'].apply(zeropad_zip)
 # 기타인원 파싱 결과를 개별 컬럼으로 펼치기
 etc_expanded = pd.json_normalize(centers_merged['기타인원_파싱'])
 etc_expanded = etc_expanded.add_prefix('인원_')
+etc_expanded = etc_expanded.apply(lambda s: pd.to_numeric(s, errors='coerce').astype('Int64'))
 nodes_center = pd.concat([nodes_center.reset_index(drop=True), etc_expanded.reset_index(drop=True)], axis=1)
 nodes_center.to_csv(out('nodes_치매안심센터.csv'), index=False, encoding='utf-8-sig')
 
-# 7-4. 운영기관 (중복 제거)
-op_df = centers_merged[['운영기관명', '운영기관대표자명', '운영기관전화번호']].dropna(subset=['운영기관명']).drop_duplicates(subset=['운영기관명'])
-op_df = op_df.reset_index(drop=True)
+# 7-4. 운영기관 (이름 정규화 + 전화번호, 둘 중 하나라도 같으면 동일 기관으로 병합)
+#   원본 검증 결과: 같은 운영기관명인데 전화번호가 다른 경우가 18건 존재(분소별 대표번호 입력 편차로 추정) ->
+#   전화번호만 기준으로 하면 오히려 같은 기관이 쪼개짐. 이름/전화번호 둘 다 조인키로 쓰는 Union-Find로 해결.
+SIDO_TOKENS = ['서울특별시', '부산광역시', '대구광역시', '인천광역시', '광주광역시', '대전광역시',
+               '울산광역시', '세종특별자치시', '경기도', '강원특별자치도', '강원도',
+               '충청북도', '충청남도', '전북특별자치도', '전라북도', '전라남도',
+               '경상북도', '경상남도', '제주특별자치도']
+
+def normalize_org_name(name):
+    n = re.sub(r'\s+', '', str(name))
+    for s in SIDO_TOKENS:
+        n = n.replace(s, '')
+    return n
+
+op_raw = centers_merged[['운영기관명', '운영기관대표자명', '운영기관전화번호']].dropna(subset=['운영기관명']).drop_duplicates().reset_index(drop=True)
+op_raw['_name_norm'] = op_raw['운영기관명'].apply(normalize_org_name)
+op_raw['_phone_norm'] = op_raw['운영기관전화번호'].apply(normalize_phone)
+
+# Union-Find
+parent = list(range(len(op_raw)))
+def find(x):
+    while parent[x] != x:
+        parent[x] = parent[parent[x]]
+        x = parent[x]
+    return x
+def union(a, b):
+    ra, rb = find(a), find(b)
+    if ra != rb:
+        parent[rb] = ra
+
+key_to_idx = {}
+for i, row in op_raw.iterrows():
+    for key in [('name', row['_name_norm']), ('phone', row['_phone_norm'])]:
+        if key[1] is None or key[1] == '':
+            continue
+        if key in key_to_idx:
+            union(i, key_to_idx[key])
+        else:
+            key_to_idx[key] = i
+
+op_raw['_group'] = [find(i) for i in range(len(op_raw))]
+n_before_op = op_raw['운영기관명'].nunique()
+
+# 그룹별 대표행: 이름이 가장 긴(정보량 많은) 행을 채택
+op_raw['_name_len'] = op_raw['운영기관명'].str.len()
+op_df = op_raw.sort_values('_name_len', ascending=False).drop_duplicates(subset='_group', keep='first')
+op_df = op_df[['운영기관명', '운영기관대표자명', '운영기관전화번호', '_group']].reset_index(drop=True)
+print(f'[운영기관 중복 제거] 이름 기준 {n_before_op}개 -> Union-Find(이름+전화) 기준 {len(op_df)}개')
+
+# 원본 행(op_raw) -> group -> 대표 운영기관ID 매핑용 그룹 lookup 준비
+group_to_final_idx = {row['_group']: i for i, row in op_df.iterrows()}
+
+op_df = op_df.drop(columns=['_group']).reset_index(drop=True)
 op_df.insert(0, '운영기관ID', ['O' + str(i + 1).zfill(4) for i in range(len(op_df))])
 op_df.columns = ['운영기관ID', 'name', '대표자명', '전화번호']
 op_df.to_csv(out('nodes_운영기관.csv'), index=False, encoding='utf-8-sig')
+
+# lookup: (원본 운영기관명, 원본 운영기관전화번호) -> 운영기관ID  (op_raw의 그룹 정보를 그대로 활용)
+op_id_by_raw = {}
+for i, row in op_raw.iterrows():
+    final_idx = group_to_final_idx[row['_group']]
+    op_id_by_raw[(row['운영기관명'], row['운영기관전화번호'] if pd.notna(row['운영기관전화번호']) else None)] = op_df.loc[final_idx, '운영기관ID']
 
 # 7-5. 프로그램 (고유값 기준 생성)
 all_programs = {}
@@ -389,11 +507,14 @@ rels_center_located = nodes_center[['센터ID', '시군구']].dropna()
 rels_center_located.to_csv(out('rels_센터_LOCATED_IN_시군구.csv'), index=False, encoding='utf-8-sig')
 
 # 8-4. 운영기관 -[:MANAGES]-> 치매안심센터
-op_lookup = op_df.set_index('name')['운영기관ID'].to_dict()
 manages_rows = []
 for _, row in centers_merged.iterrows():
-    if pd.notna(row['운영기관명']) and row['운영기관명'] in op_lookup:
-        manages_rows.append({'운영기관ID': op_lookup[row['운영기관명']], '센터ID': row['센터ID']})
+    if pd.isna(row['운영기관명']):
+        continue
+    key = (row['운영기관명'], row['운영기관전화번호'] if pd.notna(row['운영기관전화번호']) else None)
+    op_id = op_id_by_raw.get(key)
+    if op_id is not None:
+        manages_rows.append({'운영기관ID': op_id, '센터ID': row['센터ID']})
 rels_manages = pd.DataFrame(manages_rows)
 rels_manages.to_csv(out('rels_운영기관_MANAGES_센터.csv'), index=False, encoding='utf-8-sig')
 

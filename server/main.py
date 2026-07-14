@@ -104,12 +104,16 @@ def chat_endpoint(request: ChatRequest, background_tasks: BackgroundTasks):
 
     # 3. 에이전트 실행 (단건 질문만 전달)
     result = agent.invoke(
-        {"messages": formatted_messages},
+        {
+            "messages": formatted_messages,
+            "structured_response": None,
+            "final_response": None
+        },
         config={"configurable": {"user_id": request.user_id}}
     )
 
-    # 5. 구조화된 응답 추출
-    structured = result["structured_response"]
+    # 5. 구조화된 응답 추출 (LangGraph 최종 출력은 final_response)
+    structured = result["final_response"]
     response_data = structured.model_dump()
     
     # 6. 백그라운드 태스크로 DB에 새 대화 저장 및 롤링 요약 실행 (응답 지연 없음)

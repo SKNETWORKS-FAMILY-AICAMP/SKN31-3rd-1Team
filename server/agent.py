@@ -153,7 +153,7 @@ SOURCE_EXTRACTION_PROMPT = """당신은 앞서 생성된 답변의 출처를 찾
 3. 센터 정보의 경우, 도구 결과에 'URL: ...' 로 명시된 링크가 있으면 넣고, 없으면 url 필드를 아예 생략하세요.
 4. 인사말, 공감, 단순 안내 등 근거가 전혀 필요 없는 텍스트라면 빈 배열 [] 을 반환하세요.
 5. '운영기관'과 관련된 내용은 출처 목록에서 완전히 제외하세요.
-6. 동일한 센터나 기관에 대해 중복된 출처를 생성하지 마세요. 링크가 있는 센터 정보 하나만 남기고 병합하세요.
+6. 동일한 문서나 센터(특히 같은 URL을 가진 경우)에 대해 중복된 출처를 절대 생성하지 마세요. 대표적인 1개만 남기세요.
 """
 
 CHOICES_REWRITE_PROMPT = """당신은 치매 상담 챗봇의 보조 에이전트입니다.
@@ -225,11 +225,20 @@ def source_extraction_node(state: GraphState):
         "reply_text": reply_text
     })
     
+    # 파이썬 로직 차원의 중복 제거 (URL 기준, 없으면 제목 기준)
+    unique_sources = []
+    seen_identifiers = set()
+    for src in extracted.sources:
+        identifier = src.url if src.url else src.title
+        if identifier not in seen_identifiers:
+            unique_sources.append(src)
+            seen_identifiers.add(identifier)
+            
     # Create final response combining text and sources
     final_response = FinalReplyOutput(
         type="reply",
         content=response.content,
-        sources=extracted.sources
+        sources=unique_sources
     )
     
     return {

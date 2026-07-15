@@ -51,7 +51,8 @@ TARGET_URLS = [
     "https://www.mohw.go.kr/menu.es?mid=a10712010100", # 보건복지부 치매조기검진사업
     "https://www.easylaw.go.kr/CSP/OnhunqueansInfoRetrieve.laf?onhunqnaAstSeq=97&onhunqueSeq=4461", # 법제처 찾기쉬운 생활법령 정보
     "https://www.mentalhealth.go.kr/portal/disease/diseaseDetail.do?dissId=22", # 국가정신건강정보포털 | 정신건강정보 > 질환별 정보
-    "https://www.nid.or.kr/info/diction_list5.aspx?gubun=0506" # 중앙치매센터
+    "https://www.nid.or.kr/info/diction_list5.aspx?gubun=0506", # 중앙치매센터
+    "https://clinic.paju.go.kr/clinic/clinic_03/clinic_03_14/clinic_03_14_02.jsp", # 파주시 보건소
 ]
 
 CHUNK_SIZE = 400
@@ -107,6 +108,7 @@ def extract_text_from_page(url: str) -> dict:
         or soup.select_one("div.board_con")
         or soup.select_one("article#content")
         or soup.select_one("div.cntWrap.dictionWrap")
+        or soup.select_one("div.content-body")
     )
     text = main_content.get_text(separator="\n", strip=True) if main_content else ""
 

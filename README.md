@@ -7,7 +7,7 @@
 
 ### 1.1 팀 명
 <!-- TODO -->
-<center><h3><b> Team | 건망검진 </b></h3></center>
+<center><h3><b> Team | 📋건망검진  </b></h3></center>
 
 <br>
 

@@ -68,3 +68,12 @@ requests
 ipywidgets
 fastapi
 uvicorn
+
+# ==============================
+# Evaluation (RAGAS & Jupyter)
+# ==============================
+ragas
+jupyter
+nest-asyncio
+rapidfuzz
+

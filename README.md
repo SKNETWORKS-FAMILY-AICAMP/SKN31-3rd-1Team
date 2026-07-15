@@ -1,38 +1,57 @@
 # SKN31-3rd-1Team
 
+<br>
+
 # 1. 팀 및 팀원 소개
+
 
 ### 1.1 팀 명
 <!-- TODO -->
-#### **Team: 📋 건망검진**
+<center><h3><b> Team | 건망검진 </b></h3></center>
+
+<br>
+
+---
 
 ### 1.2 팀원 및 담당업무
 | 유진영 | 안영선 | 박연아 | 김효민 | 김동민 |
 | :---: | :---: | :---: | :---: | :---: |
-| <a href="https://github.com/ujneg18-source"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/dksdudtjs94"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/yeona9549"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/hyomin0357"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/Uranium10"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> |
+| <a href="https://github.com/ujneg18-source"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/dksdudtjs94"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/yeona9549"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/hyomin0357"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> | <a href="https://github.com/hyomin0357"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=GitHub&logoColor=white"/></a> |
 | <img src="산출물/images/슬픔이.png" width="150" height="150"> | <img src="산출물/images/버럭이.png" width="150" height="150"> | <img src="산출물/images/부럽이.png" width="150" height="150"> | <img src="산출물/images/기쁨이.png" width="150" height="150"> | <img src="산출물/images/당황이.png" width="150" height="150"> |
 | **PM · GraphDB 설계**<br><sub>데이터 수집 및 전처리</sub><br><sub>Agent Tool 개발</sub> | **VectorDB 설계**<br><sub>데이터 수집 및 전처리</sub><br><sub>Agent Tool 개발</sub> | **백엔드**<br><sub>LangGraph·AI Agent 설계</sub><br><sub>프롬프트 엔지니어링</sub> | **백엔드**<br><sub>LangGraph·AI Agent 설계</sub><br><sub>프롬프트 엔지니어링</sub> | **프론트엔드**<br><sub>웹UI 구현(챗봇 인터페이스)</sub><br><sub>백엔드 API 연동</sub> |
 
-
+---
 
 ### 1.3 기술 스택 🛠
 
 <p>
 
-<img src="https://skillicons.dev/icons?i=python,fastapi,nextjs,vercel,supabase" />
+<!-- Skill Icons -->
+<img src="https://skillicons.dev/icons?i=python,fastapi,react,vite,vercel,supabase" />
 <br><br>
 
+<!-- Backend & AI -->
 <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
-<img src="https://img.shields.io/badge/LangChain-ReAct_Agent-1C3C3C?style=for-the-badge"/>
-<img src="https://img.shields.io/badge/LangGraph-4B5563?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white"/>
+<img src="https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white"/>
+<img src="https://img.shields.io/badge/LangGraph-4B5563?style=for-the-badge&logo=langchain&logoColor=white"/>
 <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white"/>
+<img src="https://img.shields.io/badge/Google_Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white"/>
+<br>
+
+<!-- Databases -->
 <img src="https://img.shields.io/badge/Neo4j_AuraDB-4581C3?style=for-the-badge&logo=neo4j&logoColor=white"/>
-<img src="https://img.shields.io/badge/Qdrant_Cloud-DC244C?style=for-the-badge"/>
-<img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white"/>
-<img src="https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=black"/>
+<img src="https://img.shields.io/badge/Qdrant_Cloud-DC244C?style=for-the-badge&logo=qdrant&logoColor=white"/>
+<img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white"/>
+<br>
+
+<!-- Frontend & Deployment -->
+<img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB"/>
+<img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E"/>
+<img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white"/>
+<img src="https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white"/>
 
 </p>
-
 
 ---
 
@@ -41,7 +60,6 @@
 <div align="center">
 <img src="산출물/images/WBS.svg" width="1000">
 </div>
-
 
 ---
 
@@ -53,13 +71,13 @@
 
 ### 2.2 프로젝트 소개
 
-- <b>AI 치매 정보 알리미</b>는 치매가 걱정되는 보호자를 대상으로, <b>전국 치매안심센터 정보</b>(GraphDB)와 <b>치매 조기검진·증상 가이드라인 문서</b>(VectorDB)를 결합한 <b> RAG 기반 챗봇</b>을 개발하는 프로젝트입니다.
+- <b>AI 치매 정보 알리미</b>는 치매가 걱정되는 보호자를 대상으로, <b>전국 치매안심센터 정보</b>(GraphDB)와 <b>치매 조기검진·증상 가이드라인 문서</b>(VectorDB)를 결합한 <b> RAG 기반 챗봇</b>을 개발하는 프로젝트이다.
 
-- 보호자가 증상을 설명하면 관련 VectorDB에 적재된 가이드라인을 근거로 안내하고, 거주 지역을 알려주면 가까운 치매안심센터의 위치·운영기관·제공 프로그램 정보를 GraphDB에 기반하여 제공합니다. 
+- 보호자가 증상을 설명하면 관련 VectorDB에 적재된 가이드라인을 근거로 안내하고, 거주 지역을 알려주면 가까운 치매안심센터의 위치·운영기관·제공 프로그램 정보를 GraphDB에 기반하여 제공한다. 
 
 - <b>LangGraph 기반 AI 에이전트</b>가 질문 내용에 따라 GraphDB/VectorDB 조회하여 tool을
-스스로 판단해 호출하는 구조로 구현했습니다. 정적인 체인(LCEL) 대신,
-LLM과 tool이 답이 나올 때까지 왕복하는 <b>ReAct 에이전트</b> 루프를 사용했습니다.
+스스로 판단해 호출하는 구조로 구현했다. 정적인 체인(LCEL) 대신,
+LLM과 tool이 답이 나올 때까지 왕복하는 <b>ReAct 에이전트</b> 루프를 사용했다.
 
 - ① 생각(Reasoning) → ② 행동(Acting, tool 호출) → ③ 관찰(Observation, 결과 확인) → ④ 재판단(1번으로 반복 여부 결정) → ⑤ 최종 답변
 
@@ -109,11 +127,13 @@ SKN31-3nd-1Team/
 │   └── agent.py
 │
 ├── server/                      # FastAPI 서버
-│   ├── extractor.py
-│   ├── family_tool.py
-│   ├── main.py
-│   ├── server.bat
-│   └── state_manager.py
+│   ├── agent.py                 # LangGraph 기반 ReAct 에이전트 및 프롬프트 로직
+│   ├── context_loader.py        # 대화 컨텍스트 및 DB 데이터 로딩
+│   ├── extractor.py             # 주관식 응답 데이터(엔티티) 추출 모듈
+│   ├── family_tool.py           # 가족 관계 및 환자 기본 정보 조회 툴
+│   ├── main.py                  # FastAPI 메인 애플리케이션 및 라우터
+│   ├── server.bat               # 서버 실행(uvicorn) 스크립트
+│   └── state_manager.py         # 세션 상태 및 Supabase 연동 관리
 │
 ├── vector_db/                   # VectorDB(Qdrant) 관련 코드
 │   ├── __init__.py
@@ -160,7 +180,7 @@ SKN31-3nd-1Team/
 - 치매 조기증상 안내 RAG 챗봇 프로젝트에서 Vector DB(Qdrant) 파트를 담당해, 가이드라인 원문 수집부터 정제·chunking·임베딩 적재, 그리고 에이전트가 호출할 검색 툴까지 전체 파이프라인을 구축했다. 이론으로 공부할 때보다 직접 겪으며 구현하다 보니 LLM과 RAG 구조를 훨씬 깊이 이해할 수 있었고, 좋은 팀원들과 함께 프로젝트를 진행할 수 있어서 좋았다.
 
 #### 동민
-- 시스템 아키텍처 설계 및 백엔드-프론트엔드 구현/배포, supabase RDB를 통한 유저 구글 OAuth JWT 구현 및 컨텍스트 데이터 관리를 담당하였다. 민감한 개인정보에 대해 보안 측면의 아쉬움과 함께 한층 더 깊은 고민과 개선목표를 새길 수 있었다. 또한 팀원들의 적극적인 QA 피드백을 통해 프롬프트 응답과 UI의 사용성을 높이는 경험을 거치며, 설계만큼이나 팀워크와 현장검증이 중요하다는 것을 깨달을 수 있었다.
+- 시스템 아키텍처 설계 및 백엔드-프론트엔드 구현/배포, supabase RDB를 통한 유저 구글 OAuth JWT 구현 및 컨텍스트 데이터 관리를 담당하였다. 민감한 개인정보에 대해 보안 측면의 아쉬움과 함께 4차 프로젝트로 이어감에 대해 한층 더 깊은 고민과 개선목표를 새길 수 있었다. 또한 팀원들의 적극적인 QA 피드백을 통해 프롬프트 응답과 UI의 사용성을 높이는 경험을 거치며, 설계만큼이나 팀워크와 현장검증이 중요하다는 것을 깨달을 수 있었다.
 
 #### 연아
 - 에이전트/시스템 프롬프트를 담당하면서 가장 크게 느낀 건, 프롬프트에 규칙을 아무리 명확히 적어도 그게 곧바로 원하는 동작으로 이어지진 않는다는 점이었다. 규칙을 계속 좁히고 구체화하는 과정이 필요하다는 걸 체감했다. "한 번에 완벽하게 설계하기"보다, 일단 돌려보고 에러나 이상 동작을 하나씩 확인하며 좁혀나가는 게 훨씬 효과적이었다. 이 과정에서 팀원들과 함께 에러를 점점 줄여나가며 완성도를 높여갈 수 있어서 뜻깊은 경험이었고 함께 해준 팀원들께 감사합니다

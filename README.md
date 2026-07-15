@@ -115,7 +115,7 @@ SKN31-3nd-1Team/
 ├── server.bat
 ├── UVon.bat
 │
-├── graph_db/                    # GraphDB(Neo4j) 관련 코드
+├── graph_db/                    # GraphDB(Neo4j) 관련 코드 (크롤링/적재/TOOL)
 │   ├── __init__.py
 │   ├── graph_search_tool.py
 │   ├── load_to_aura.py
@@ -135,7 +135,7 @@ SKN31-3nd-1Team/
 │   ├── server.bat               # 서버 실행(uvicorn) 스크립트
 │   └── state_manager.py         # 세션 상태 및 Supabase 연동 관리
 │
-├── vector_db/                   # VectorDB(Qdrant) 관련 코드
+├── vector_db/                   # VectorDB(Qdrant) 관련 코드 (크롤링/적재/TOOL)
 │   ├── __init__.py
 │   ├── run_vector.py
 │   └── vector_search_tool.py
@@ -153,23 +153,19 @@ SKN31-3nd-1Team/
 
 ## 4. 수집 데이터 설명
 - [데이터 수집 및 전처리 문서](./산출물/데이터수집및전처리문서.md)
-- 문서보고 간략하게 요약
-
 
 ---
 
 ## 5. Application의 주요 기능
 
 - [시스템 아키텍처 및 DB 설계](./산출물/시스템아키텍쳐.md)
-- 문서보고 간략하게 요약 or 시연영상 or 사진
+- [실행화면 캡쳐](./산출물/실행화면.md)
 
 ---
 
 ## ６. 성능 평가
 
 - [성능 평가](./산출물/성능평가.md)
-- 모델 선정이유 or 문서보고 간략하게 요약
-
 
 ---
 ## 7. 회고
